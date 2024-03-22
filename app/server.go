@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
 )
@@ -29,15 +30,22 @@ func main() {
 
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
-	buffer := make([]byte, 1<<12)
-	bytesRead, err := conn.Read(buffer)
-	if err != nil {
-		panic(err)
-	}
+	var readError error
 
-	request := string(buffer[:bytesRead])
-	if request == "*1\r\n$4\r\nping\r\n" {
-		payload := []byte("+PONG\r\n")
-		conn.Write(payload)
+	buffer := make([]byte, 1<<12)
+	for readError != io.EOF {
+		bytesRead, readError := conn.Read(buffer)
+		if readError == io.EOF {
+			break
+		}
+		if readError != nil {
+			panic(readError)
+		}
+
+		request := string(buffer[:bytesRead])
+		if request == "*1\r\n$4\r\nping\r\n" {
+			payload := []byte("+PONG\r\n")
+			conn.Write(payload)
+		}
 	}
 }
