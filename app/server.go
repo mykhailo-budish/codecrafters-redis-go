@@ -42,10 +42,6 @@ func handleConnection(conn net.Conn) {
 			panic(readError)
 		}
 
-		request := string(buffer[:bytesRead])
-		if request == "*1\r\n$4\r\nping\r\n" {
-			payload := []byte("+PONG\r\n")
-			conn.Write(payload)
-		}
+		command := ParseCommand(buffer[:bytesRead])
 	}
 }
